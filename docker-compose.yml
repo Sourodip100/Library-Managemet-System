@@ -1,0 +1,54 @@
+version: "3.9"
+
+services:
+  mongo:
+    image: mongo:7.0
+    container_name: library-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: devpassword
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+    container_name: library-backend
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      PORT: 5000
+      MONGO_URI: mongodb://admin:devpassword@mongo:27017/library_db?authSource=admin
+      JWT_SECRET: dev_only_secret_change_in_prod
+      JWT_EXPIRES_IN: 7d
+      CLIENT_URL: http://localhost:3000
+      FINE_PER_DAY: 5
+      LOAN_PERIOD_DAYS: 14
+    ports:
+      - "5000:5000"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        REACT_APP_API_URL: http://localhost:5000/api
+    container_name: library-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "3000:8080"
+
+volumes:
+  mongo-data:

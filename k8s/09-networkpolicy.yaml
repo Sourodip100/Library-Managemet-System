@@ -1,0 +1,32 @@
+# Requires a CNI that enforces NetworkPolicies (the default AWS VPC CNI on EKS
+# does NOT enforce these unless you enable Network Policy support, e.g. via
+# the "vpc-cni" add-on's network policy feature, or install Calico).
+#
+#   aws eks update-addon --cluster-name <name> --addon-name vpc-cni \
+#     --configuration-values '{"enableNetworkPolicy":"true"}'
+#
+# MongoDB now runs on Atlas (outside the cluster), so there's no in-cluster
+# "mongo" pod to restrict traffic to. Atlas access is controlled instead via
+# its own IP Access List / VPC Peering (see README). This policy just locks
+# down which pods can reach the backend.
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: backend-allow-frontend-and-ingress
+  namespace: library-system
+spec:
+  podSelector:
+    matchLabels:
+      app: backend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: frontend
+        - namespaceSelector: {} # allows ALB controller / ingress health checks; tighten as needed
+      ports:
+        - protocol: TCP
+          port: 5000

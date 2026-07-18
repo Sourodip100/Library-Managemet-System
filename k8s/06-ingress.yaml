@@ -1,0 +1,51 @@
+# Requires the AWS Load Balancer Controller to be installed in the cluster:
+# https://kubernetes-sigs.github.io/aws-load-balancer-controller/
+#
+#   helm repo add eks https://aws.github.io/eks-charts
+#   helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
+#     -n kube-system \
+#     --set clusterName=<your-cluster-name> \
+#     --set serviceAccount.create=true \
+#     --set serviceAccount.name=aws-load-balancer-controller
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: library-ingress
+  namespace: library-system
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    # Uncomment and set once you have an ACM certificate for HTTPS:
+    # alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:<region>:<account-id>:certificate/<cert-id>
+    # alb.ingress.kubernetes.io/ssl-redirect: '443'
+    alb.ingress.kubernetes.io/healthcheck-path: /healthz
+spec:
+  rules:
+    - http:
+        paths:
+          # API traffic -> backend service
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: backend-service
+                port:
+                  number: 80
+          - path: /healthz
+            pathType: Exact
+            backend:
+              service:
+                name: backend-service
+                port:
+                  number: 80
+          # Everything else -> frontend (React SPA)
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend-service
+                port:
+                  number: 80

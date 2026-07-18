@@ -1,0 +1,9 @@
+{
+  "short_name": "Library MS",
+  "name": "Library Management System",
+  "icons": [],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#2f3e46",
+  "background_color": "#ffffff"
+}

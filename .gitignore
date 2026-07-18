@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Build output
+build/
+dist/
+*/build/
+*/dist/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+*/.env
+*/.env.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Kubernetes secrets you may generate locally while testing
+k8s/*.local.yaml
+kubeconfig*
+
+# Terraform (if added later for EKS provisioning)
+*.tfstate
+*.tfstate.*
+.terraform/
